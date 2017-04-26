@@ -5,11 +5,18 @@ import App from './App'
 import router from './router'
 import VueSocket from 'vue-socket.io'
 import AMap from 'vue-amap';
+import Mint from 'mint-ui';
+import axios from 'axios'
+import 'mint-ui/lib/style.css'
 
+
+Vue.use(Mint);
 
 Vue.use(VueSocket, 'http://localhost:3000');
 Vue.use(AMap);
 
+
+Vue.prototype.$http = axios
 
 
 // 初始化vue-amap

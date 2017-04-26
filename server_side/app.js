@@ -38,8 +38,17 @@ app.get('/', (req, res) => {
     res.redirect('http://localhost:3000/index.html')
 })
 
+app.all('*', function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+    res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+    res.header("X-Powered-By",' 3.2.1')
+    if(req.method=="OPTIONS") res.send(200);/*让options请求快速返回*/
+    else  next();
+});
 //登录
 app.post('/login', (req, res) => {
+    console.log(req)
     if (users[req.body.user]) {
         res.send({
             code: '401',
@@ -48,8 +57,9 @@ app.post('/login', (req, res) => {
     } else {
         let room = null
         if (req.body.newRoom) {
-            rooms[roomNum++] = [req.body.user]
-            room = rooNum
+            rooms[roomNum] = [req.body.user]
+            room = roomNum
+            roomNum++
         } else {
             rooms[req.body.room].push(req.body.user)
             room = req.body.room
