@@ -88,7 +88,15 @@ io.sockets.on('connection', (socket) => {
     socket.on('emit_method', (data) => {
         console.log(data)
         // socket.emit('an event sent to all connected clients');
-        socket.emit('update',123)
+        socket.emit('update', [
+            [121 + Math.random(), 31.197646 + Math.random()],
+            [121.40018 + Math.random(), 31.197622 + Math.random()],
+            [121.69991, 31.207649],
+            [121.69992, 31.207649],
+            [121.69993, 31.207649],
+            [121.39993, 32.207649],
+             [121.49993, 32.207649]
+        ])
     })
     socket.on('update', (data) => {
 

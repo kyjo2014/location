@@ -67,7 +67,8 @@
         console.log('socket connected')
       },
       update: function (val) {
-        console.log(val)
+        console.log(this.data)
+        this.$set(this,'markers',val)
       }
     },
     methods: {
