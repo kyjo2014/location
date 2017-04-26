@@ -86,8 +86,8 @@ io.sockets.on('connection', (socket) => {
         }
     })
     socket.on('emit_method', (data) => {
-        // console.log(data)
-        socket.emit('an event sent to all connected clients');
+        console.log(data)
+        // socket.emit('an event sent to all connected clients');
         socket.emit('update',123)
     })
     socket.on('update', (data) => {

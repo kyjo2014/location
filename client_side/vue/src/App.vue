@@ -62,15 +62,16 @@
         ]
       };
     },
-    methods: {
-      sockets: {
-        connect: function () {
-          console.log('socket connected')
-        },
-        update: function (val) {
-          console.log('this method was fired by the socket server. eg: io.emit("customEmit", data)')
-        }
+    sockets: {
+      connect: function () {
+        console.log('socket connected')
       },
+      update: function (val) {
+        console.log(val)
+      }
+    },
+    methods: {
+
       autoSend(instance) {
         setInterval(() => {
           instance.getCurrentPosition()
@@ -80,7 +81,7 @@
         console.log(this.amapManager.getMap());
         this.instance.getCurrentPosition((status, result) => {
           console.log(result)
-         
+
         });
       },
       uploadPos() {
