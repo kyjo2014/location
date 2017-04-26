@@ -27,6 +27,7 @@ if ('development' == app.get('env')) {
     app.use(express.errorHandler());
 }
 
+let roomNum = 0;
 
 const rooms = {} //房间列表
 
@@ -39,7 +40,29 @@ app.get('/', (req, res) => {
 
 //登录
 app.post('/login', (req, res) => {
-
+    if (users[req.body.user]) {
+        res.send({
+            code: '401',
+            message: '用户已存在，请稍后再登录'
+        })
+    } else {
+        let room = null
+        if (req.body.newRoom) {
+            rooms[roomNum++] = [req.body.user]
+            room = rooNum
+        } else {
+            rooms[req.body.room].push(req.body.user)
+            room = req.body.room
+        }
+        users[req.body.user] = {
+            id: req.body.user,
+            room: room
+        }
+        res.send({
+            code: '200',
+            message: '登录成功'
+        })
+    }
 })
 
 
@@ -63,7 +86,9 @@ io.sockets.on('connection', (socket) => {
         }
     })
     socket.on('emit_method', (data) => {
-        console.log(data)
+        // console.log(data)
+        socket.emit('an event sent to all connected clients');
+        socket.emit('update',123)
     })
     socket.on('update', (data) => {
 

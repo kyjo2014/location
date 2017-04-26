@@ -32,7 +32,7 @@
         events: {
           'moveend': () => {
             let mapCenter = this.amapManager.getMap().getCenter();
-            this.center = [mapCenter.getLng(), mapCenter.getLat()];
+            // this.center = [mapCenter.getLng(), mapCenter.getLat()];
           },
           'zoomchange': () => {
             this.zoom = this.amapManager.getMap().getZoom();
@@ -44,12 +44,13 @@
         plugin: [{
           pName: 'Geolocation',
           showButton: false,
+          panToLocation: false,
           events: {
             init(instance) {
-              instance.getCurrentPosition((status, result) => {
-                self.center = [result.position.lng, result.position.lat];
-              });
-              self.instance = instance
+              self.autoSend(instance)
+            },
+            complete(result) {
+              self.$socket.emit('emit_method', [result.position.lng, result.position.lat]);
             }
           }
         }],
@@ -70,11 +71,16 @@
           console.log('this method was fired by the socket server. eg: io.emit("customEmit", data)')
         }
       },
+      autoSend(instance) {
+        setInterval(() => {
+          instance.getCurrentPosition()
+        }, 1000)
+      },
       getMap: function () {
         console.log(this.amapManager.getMap());
         this.instance.getCurrentPosition((status, result) => {
           console.log(result)
-          this.$socket.emit('emit_method', [result.position.lng, result.position.lat]);
+         
         });
       },
       uploadPos() {
