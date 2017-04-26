@@ -6,7 +6,7 @@
     </div>
     <div class="amap-page-container">
       <el-amap :vid="'amap-vue'" :center="center" :zoom="zoom" :map-manager="amapManager" :plugin="plugin" :events="events">
-        <el-amap-marker v-for="marker in markers" key="marker" :position="marker"></el-amap-marker>
+        <el-amap-marker v-for="marker in markers" key="marker" :position="getPos(marker)" :content="getName(marker.user)"></el-amap-marker>
       </el-amap>
       <button v-on:click="getMap">get map</button>
       <button type="button" name="button" v-on:click="addZoom">zoom++</button>
@@ -48,31 +48,56 @@
           events: {
             init(instance) {
               self.autoSend(instance)
+              self.loginWs()
             },
             complete(result) {
-              self.$socket.emit('emit_method', [result.position.lng, result.position.lat]);
+              self.$socket.emit('emit_method', {
+                pos: {
+                  log: result.position.lng,
+                  lat: result.position.lat
+                }
+              });
             }
           }
         }],
         amapManager: amapManager,
-        markers: [
-          [121.59996, 31.197646],
-          [121.40018, 31.197622],
-          [121.69991, 31.207649]
-        ]
+        // markers: [
+        //   [121.59996, 31.197646],
+        //   [121.40018, 31.197622],
+        //   [121.69991, 31.207649]
+        // ]
+        markers: {
+
+        }
       };
+    },
+    mounted() {
+
     },
     sockets: {
       connect: function () {
         console.log('socket connected')
       },
       update: function (val) {
-        console.log(this.data)
-        this.$set(this,'markers',val)
+        this.$set(this.markers,val.user,val)
+
       }
     },
     methods: {
+      getName(name) {
+        return `<div style='width:50px;height:50px;background:red'>${name}</div>`
+      },
+      getPos(user){
+           return [user.position.log,user.position.lat]
+          // return [131,26]
+      },
+      loginWs() {
+        this.$socket.emit('online', {
+          user: '01',
+          room: 1
+        });
 
+      },
       autoSend(instance) {
         setInterval(() => {
           instance.getCurrentPosition()

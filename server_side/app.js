@@ -84,19 +84,17 @@ io.sockets.on('connection', (socket) => {
                 }
             }
         }
+        socket.join(data.room)
     })
     socket.on('emit_method', (data) => {
-        console.log(data)
-        // socket.emit('an event sent to all connected clients');
-        socket.emit('update', [
-            [121 + Math.random(), 31.197646 + Math.random()],
-            [121.40018 + Math.random(), 31.197622 + Math.random()],
-            [121.69991, 31.207649],
-            [121.69992, 31.207649],
-            [121.69993, 31.207649],
-            [121.39993, 32.207649],
-             [121.49993, 32.207649]
-        ])
+        
+        socket.emit('update', {
+            user: socket.name,
+            position: {
+                log: data.pos.log,
+                lat: data.pos.lat
+            }
+        })
     })
     socket.on('update', (data) => {
 
