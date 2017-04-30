@@ -44,14 +44,27 @@
     methods: {
       login() {
         let body = {
-          phone: this.phone,
+          user: this.phone,
           roomNum: this.roomNum,
           newRoom: this.newRoom
         }
         this.$http.post('http://localhost:3000/login', body)
           .then((result) => {
-            console.log(result)            
+            var result = result.data
+            if (result.code == '200') {
+                console.log(this)
+                this.setLocalStorage('token',result.data.token)
+                this.$router.push('/map')
+            }
           })
+      },
+      validLogin() {
+
+      },
+      setLocalStorage(key, val) {
+        console.log(window.localStorage)
+        window.localStorage.removeItem(key)
+        window.localStorage.setItem(key, val)
       }
     }
   }

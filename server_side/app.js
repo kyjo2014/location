@@ -4,8 +4,8 @@ const path = require('path')
 const socketio = require('socket.io')
 const crypto = require('crypto');
 const hash = crypto.createHash('sha256');
-
-
+const socketioJwt = require("socketio-jwt");
+const jwt = require('jsonwebtoken');
 
 //生成express实例
 let app = express()
@@ -38,17 +38,16 @@ app.get('/', (req, res) => {
     res.redirect('http://localhost:3000/index.html')
 })
 
-app.all('*', function(req, res, next) {
+app.all('*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
-    res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
-    res.header("X-Powered-By",' 3.2.1')
-    if(req.method=="OPTIONS") res.send(200);/*让options请求快速返回*/
-    else  next();
+    res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+    res.header("X-Powered-By", ' 3.2.1')
+    if (req.method == "OPTIONS") res.send(200); /*让options请求快速返回*/
+    else next();
 });
 //登录
 app.post('/login', (req, res) => {
-    console.log(req)
     if (users[req.body.user]) {
         res.send({
             code: '401',
@@ -56,23 +55,47 @@ app.post('/login', (req, res) => {
         })
     } else {
         let room = null
-        if (req.body.newRoom) {
-            rooms[roomNum] = [req.body.user]
-            room = roomNum
-            roomNum++
-        } else {
-            rooms[req.body.room].push(req.body.user)
-            room = req.body.room
+        try {
+            if (req.body.newRoom) {
+                rooms[roomNum] = [req.body.user]
+                room = roomNum
+                roomNum++
+            } else {
+                if (!rooms[req.body.roomNum]) {
+                    res.send({
+                        code: '404',
+                        message: '不存在此房间'
+                    })
+                    return
+                }
+                rooms[req.body.roomNum].push(req.body.user)
+                room = req.body.roomNum
+            }
+            users[req.body.user] = {
+                id: req.body.user,
+                room: room
+            }
+        } catch (e) {
+            console.log(e)
+            res.send({
+                code: '404',
+                message: e
+            })
         }
-        users[req.body.user] = {
-            id: req.body.user,
-            room: room
-        }
+
+        // we are sending the profile in the token
+        var token = jwt.sign(users[req.body.user], 'your secret or public key', {
+            expiresIn: 60 * 5
+        });
         res.send({
             code: '200',
-            message: '登录成功'
+            message: '登录成功',
+            data: {
+                token: token
+            }
         })
     }
+
 })
 
 
@@ -81,7 +104,16 @@ var server = http.createServer(app).listen(3000);
 var io = socketio.listen(server)
 
 //socket建立连接
-io.sockets.on('connection', (socket) => {
+io.sockets.on('connection', socketioJwt.authorize({
+    secret: 'your secret or public key',
+    timeout: 15000 // 15 seconds to send the authentication message
+})).on('authenticated', (socket) => {
+
+    socket.join(socket.decoded_token.room, () => {
+        console.log(socket.rooms); // [ <socket.id>, 'room 237' ]
+        socket.to(socket.decoded_token.room, 'a new user has joined the room');
+    })
+    console.log(socket.rooms)
     socket.on('online', (data) => {
         //将上线的用户名存储为 socket 对象的属性，以区分每个 socket 对象，方便后面使用
         socket.name = data.user;
@@ -94,23 +126,24 @@ io.sockets.on('connection', (socket) => {
                 }
             }
         }
-        socket.join(data.room)
+
     })
-    socket.on('emit_method', (data) => {
-        
-        socket.emit('update', {
-            user: socket.name,
+    socket.on('update', (data) => {
+
+        socket.broadcast.to(socket.decoded_token.room).emit('reply', {
+            user: socket.decoded_token.id,
             position: {
                 log: data.pos.log,
                 lat: data.pos.lat
             }
         })
     })
-    socket.on('update', (data) => {
-
-    })
 
     socket.on('logout', (data) => {
 
+    })
+
+    socket.on('disconnect', (data) => {
+        console.log(data)
     })
 })

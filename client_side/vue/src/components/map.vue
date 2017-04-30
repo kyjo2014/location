@@ -48,7 +48,9 @@
               self.watchPos(instance)
             },
             complete(result) {
-              self.$socket.emit('emit_method', {
+              self.$socket.emit('authenticate', {
+                token: self.token
+              }).emit('update', {
                 pos: {
                   log: result.position.lng,
                   lat: result.position.lat
@@ -66,6 +68,11 @@
         }
       };
     },
+    computed: {
+      token() {
+        return window.localStorage['token']
+      }
+    },
     mounted() {
 
     },
@@ -73,7 +80,7 @@
       connect: function () {
         console.log('socket connected')
       },
-      update: function (val) {
+      reply: function (val) {
         this.$set(this.markers, val.user, val)
       }
     },
@@ -95,7 +102,7 @@
         setInterval(() => {
           instance.getCurrentPosition()
         }, 1000)
-       console.log(instance.watchPosition())
+        console.log(instance.watchPosition())
       },
       getMap: function () {
         console.log(this.amapManager.getMap());
