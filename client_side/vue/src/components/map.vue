@@ -35,7 +35,6 @@
             this.zoom = this.amapManager.getMap().getZoom();
           },
           'click': (e) => {
-            alert('map clicked');
           }
         },
         plugin: [{
@@ -73,6 +72,10 @@
         return window.localStorage['token']
       }
     },
+    beforeRouteLeave(to, from, next) {
+      this.$socket.close()
+      next()
+    },
     mounted() {
 
     },
@@ -82,7 +85,11 @@
       },
       reply: function (val) {
         this.$set(this.markers, val.user, val)
-      }
+      },
+      unauthorized: function (val) {
+        this.$router.replace('/login')
+      },
+      authenticated: function () {}
     },
     methods: {
       getName(name) {
@@ -101,11 +108,9 @@
       watchPos(instance) {
         setInterval(() => {
           instance.getCurrentPosition()
-        }, 1000)
-        console.log(instance.watchPosition())
+        }, 3000)
       },
       getMap: function () {
-        console.log(this.amapManager.getMap());
         this.instance.getCurrentPosition((status, result) => {
           console.log(result)
 

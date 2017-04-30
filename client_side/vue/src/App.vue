@@ -5,7 +5,21 @@
 </template>
 
 <script>
- 
+  export default {
+    data() {
+      return {
+
+      }
+    },
+    methods: {
+      checkLogin () {
+        
+      }
+    },
+    mounted() {
+
+    }
+  }
 
 </script>
 

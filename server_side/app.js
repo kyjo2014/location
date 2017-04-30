@@ -48,12 +48,21 @@ app.all('*', function (req, res, next) {
 });
 //登录
 app.post('/login', (req, res) => {
+    let newPeople = true
     if (users[req.body.user]) {
-        res.send({
-            code: '401',
-            message: '用户已存在，请稍后再登录'
-        })
-    } else {
+        var now = Date.now()
+        if (now - users[req.body.user].loginDate < 1500) {
+            newPeople = false
+            res.send({
+                code: '401',
+                message: '用户已存在，请稍后再登录'
+            })
+        } else {
+            newPeople = true
+        }
+
+    }
+    if (newPeople) {
         let room = null
         try {
             if (req.body.newRoom) {
@@ -73,7 +82,8 @@ app.post('/login', (req, res) => {
             }
             users[req.body.user] = {
                 id: req.body.user,
-                room: room
+                room: room,
+                loginDate: Date.now()
             }
         } catch (e) {
             console.log(e)
@@ -85,7 +95,7 @@ app.post('/login', (req, res) => {
 
         // we are sending the profile in the token
         var token = jwt.sign(users[req.body.user], 'your secret or public key', {
-            expiresIn: 60 * 5
+            expiresIn: 6000 * 5
         });
         res.send({
             code: '200',
@@ -110,10 +120,8 @@ io.sockets.on('connection', socketioJwt.authorize({
 })).on('authenticated', (socket) => {
 
     socket.join(socket.decoded_token.room, () => {
-        console.log(socket.rooms); // [ <socket.id>, 'room 237' ]
         socket.to(socket.decoded_token.room, 'a new user has joined the room');
     })
-    console.log(socket.rooms)
     socket.on('online', (data) => {
         //将上线的用户名存储为 socket 对象的属性，以区分每个 socket 对象，方便后面使用
         socket.name = data.user;
@@ -139,9 +147,6 @@ io.sockets.on('connection', socketioJwt.authorize({
         })
     })
 
-    socket.on('logout', (data) => {
-
-    })
 
     socket.on('disconnect', (data) => {
         console.log(data)

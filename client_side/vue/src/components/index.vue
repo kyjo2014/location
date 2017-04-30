@@ -5,6 +5,7 @@
     </mt-radio>
     <mt-field v-if="show" label="房间号" placeholder="房间号" type="text" :attr="{ maxlength: 4 }" v-model="roomNum"></mt-field>
     <mt-button type="primary" @click="login">登录</mt-button>
+
   </div>
 </template>
 <script>
@@ -42,19 +43,32 @@
       }
     },
     methods: {
+      open() {
+        this.dialog = true
+      },
+      close() {
+        this.dialog = false
+      },
       login() {
         let body = {
           user: this.phone,
           roomNum: this.roomNum,
           newRoom: this.newRoom
         }
+        for (var i in body) {
+          if (typeof body[i] == 'string' && body[i] == '') {
+            this.$messagebox.alert('请补全信息').then(action => {});
+            // return;
+          }
+        }
         this.$http.post('http://localhost:3000/login', body)
           .then((result) => {
             var result = result.data
             if (result.code == '200') {
-                console.log(this)
-                this.setLocalStorage('token',result.data.token)
-                this.$router.push('/map')
+              this.setLocalStorage('token', result.data.token)
+              this.$router.push('/map')
+            } else {
+              this.$messagebox.alert(result.message).then(action => {});
             }
           })
       },
