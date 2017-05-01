@@ -30,12 +30,14 @@
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
-    margin-top: 60px;
+    height:100%;
   }
-
-  .amap-wrapper {
-    width: 500px;
-    height: 500px;
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
   }
 
 </style>

@@ -93,7 +93,6 @@ app.post('/login', (req, res) => {
             })
         }
 
-        // we are sending the profile in the token
         var token = jwt.sign(users[req.body.user], 'your secret or public key', {
             expiresIn: 6000 * 5
         });
@@ -101,7 +100,9 @@ app.post('/login', (req, res) => {
             code: '200',
             message: '登录成功',
             data: {
-                token: token
+                token: token,
+                roomNum: room,
+                id: req.body.user
             }
         })
     }
@@ -118,22 +119,23 @@ io.sockets.on('connection', socketioJwt.authorize({
     secret: 'your secret or public key',
     timeout: 15000 // 15 seconds to send the authentication message
 })).on('authenticated', (socket) => {
-
     socket.join(socket.decoded_token.room, () => {
-        socket.to(socket.decoded_token.room, 'a new user has joined the room');
+        socket.broadcast.to(socket.decoded_token.room).emit('join', socket.decoded_token.id + '加入房间');
     })
+
     socket.on('online', (data) => {
+
         //将上线的用户名存储为 socket 对象的属性，以区分每个 socket 对象，方便后面使用
-        socket.name = data.user;
-        if (!users[data.user]) {
-            users[data.user] = {
-                id: data.user,
-                position: {
-                    log: data.log,
-                    lat: data.lat
-                }
-            }
-        }
+        // socket.name = data.user;
+        // if (!users[data.user]) {
+        //     users[data.user] = {
+        //         id: data.user,
+        //         position: {
+        //             log: data.log,
+        //             lat: data.lat
+        //         }
+        //     }
+        // }
 
     })
     socket.on('update', (data) => {

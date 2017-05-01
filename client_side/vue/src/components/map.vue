@@ -1,5 +1,23 @@
 <template>
   <div class="map">
+    <mt-popup v-model="popupVisible" popup-transition="popup-fade" position="top" modal="false" closeOnClickModal="false">
+     <!--<div style="width:70%; height:100px;background: red;margin: 0 auto" class="userList">
+        <mt-swipe :auto="4000">
+          <mt-swipe-item v-for="marker in 4" key="marker">
+            {{marker}}
+          </mt-swipe-item>
+        </mt-swipe>
+
+      </div>-->
+      <div class="serverInfo">
+        {{serverInfo}}
+      </div>
+      <div class="infoList">
+        账号：<span>{{id}}</span> 房间号：
+        <span>{{room}}</span>
+      </div>
+    </mt-popup>
+
     <div class="amap-wrapper">
       <el-amap :vid="'amap-vue'" amapManager="AMapManager">
       </el-amap>
@@ -22,6 +40,10 @@
     data: function () {
       let self = this
       return {
+        serverInfo: 'no thing',
+        id: '123',
+        room: '123',
+        popupVisible: true,
         picked: '',
         vid: 'amap-vue-1',
         zoom: 12,
@@ -29,19 +51,20 @@
         events: {
           'moveend': () => {
             let mapCenter = this.amapManager.getMap().getCenter();
-            // this.center = [mapCenter.getLng(), mapCenter.getLat()];
+            this.center = [mapCenter.getLng(), mapCenter.getLat()];
           },
           'zoomchange': () => {
             this.zoom = this.amapManager.getMap().getZoom();
           },
-          'click': (e) => {
-          }
+          'click': (e) => {}
         },
         plugin: [{
           pName: 'Geolocation',
-          showButton: false,
+          showMarker: true,
+          showButton: true,
           panToLocation: false,
           showCircle: false,
+          markerOptions: this.getMarker(),
           events: {
             init(instance) {
               self.watchPos(instance)
@@ -55,6 +78,7 @@
                   lat: result.position.lat
                 }
               });
+
             },
             error(err) {
               console.log(err)
@@ -77,7 +101,7 @@
       next()
     },
     mounted() {
-
+      this.$socket.emit('online')
     },
     sockets: {
       connect: function () {
@@ -89,11 +113,53 @@
       unauthorized: function (val) {
         this.$router.replace('/login')
       },
-      authenticated: function () {}
+      join: function(val) {
+        this.serverInfo = val
+        this.popupVisible = true
+      },
+      authenticated: function () {
+
+
+      }
     },
     methods: {
+      string2hash(input) {
+        const I64BIT_TABLE =
+          'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'.split('');
+        var hash = 5381;
+        var i = input.length - 1;
+
+        if (typeof input == 'string') {
+          for (; i > -1; i--)
+            hash += (hash << 5) + input.charCodeAt(i);
+        } else {
+          for (; i > -1; i--)
+            hash += (hash << 5) + input[i];
+        }
+        var value = hash & 0x7FFFFFFF;
+
+        var retValue = '';
+        do {
+          retValue += I64BIT_TABLE[value & 0x3F];
+        }
+        while (value >>= 6);
+
+        return retValue;
+      },
+      getMarker() {
+        return {
+          content: `<div class="markers" style='width:50px;height:50px;'><p>自己</p><i class="fa fa-arrow-down" style="color: white"></i></div>`
+        }
+      },
       getName(name) {
-        return `<div style='width:50px;height:50px;background:red'>${name}</div>`
+        var hashedN = this.string2hash(name)
+        return `<div  class="markers" style='width:50px;height:50px;'>
+        <p>
+        ${name}
+        </p>
+        <i class="fa fa-arrow-down" style="color: rgb(${hashedN[0].charCodeAt()},${hashedN[1].charCodeAt()},${hashedN[2].charCodeAt()})">
+        </i>
+        </div>`
       },
       getPos(user) {
         return [user.position.log, user.position.lat]
@@ -139,6 +205,21 @@
 
 </script>
 <style lang="css">
+  .mint-popup {
+    width: 100%;
+  }
 
+  .map {
+    height: 100%;
+  }
+
+  .amap-wrapper {
+    width: 100%;
+    height: 100%;
+  }
+
+  p {
+    margin: 0px;
+  }
 
 </style>

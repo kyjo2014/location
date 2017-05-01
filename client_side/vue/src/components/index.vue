@@ -66,6 +66,8 @@
             var result = result.data
             if (result.code == '200') {
               this.setLocalStorage('token', result.data.token)
+              this.setLocalStorage('room',result.data.room)
+              this.setLocalStorage('user',result.data.id)
               this.$router.push('/map')
             } else {
               this.$messagebox.alert(result.message).then(action => {});
