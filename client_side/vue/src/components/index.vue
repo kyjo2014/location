@@ -56,9 +56,9 @@
           newRoom: this.newRoom
         }
         for (var i in body) {
-          if (typeof body[i] == 'string' && body[i] == '') {
+          if (body['user'].length < 11 || (!body['newRoom'] && body['roomNum'].length == 0)) {
             this.$messagebox.alert('请补全信息').then(action => {});
-            // return;
+            return;
           }
         }
         this.$http.post('http://localhost:3000/login', body)
@@ -66,7 +66,7 @@
             var result = result.data
             if (result.code == '200') {
               this.setLocalStorage('token', result.data.token)
-              this.setLocalStorage('room',result.data.room)
+              this.setLocalStorage('room',result.data.roomNum)
               this.setLocalStorage('user',result.data.id)
               this.$router.push('/map')
             } else {
@@ -78,7 +78,6 @@
 
       },
       setLocalStorage(key, val) {
-        console.log(window.localStorage)
         window.localStorage.removeItem(key)
         window.localStorage.setItem(key, val)
       }

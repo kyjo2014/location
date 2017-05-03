@@ -1,7 +1,11 @@
 <template>
   <div class="map">
+    <div class="slide" v-show="!popupVisible">
+     <mt-button type="default"  @click.native="handler">信息</mt-button>
+    </div>
+   
     <mt-popup v-model="popupVisible" popup-transition="popup-fade" position="top" modal="false" closeOnClickModal="false">
-     <!--<div style="width:70%; height:100px;background: red;margin: 0 auto" class="userList">
+      <!--<div style="width:70%; height:100px;background: red;margin: 0 auto" class="userList">
         <mt-swipe :auto="4000">
           <mt-swipe-item v-for="marker in 4" key="marker">
             {{marker}}
@@ -9,10 +13,10 @@
         </mt-swipe>
 
       </div>-->
-      <div class="serverInfo">
+      <div class="serverInfo" style="font-size: 2rem">
         {{serverInfo}}
       </div>
-      <div class="infoList">
+      <div class="infoList" style="font-size: 2rem">
         账号：<span>{{id}}</span> 房间号：
         <span>{{room}}</span>
       </div>
@@ -41,8 +45,6 @@
       let self = this
       return {
         serverInfo: 'no thing',
-        id: '123',
-        room: '123',
         popupVisible: true,
         picked: '',
         vid: 'amap-vue-1',
@@ -61,7 +63,7 @@
         plugin: [{
           pName: 'Geolocation',
           showMarker: true,
-          showButton: true,
+          showButton: false,
           panToLocation: false,
           showCircle: false,
           markerOptions: this.getMarker(),
@@ -70,9 +72,7 @@
               self.watchPos(instance)
             },
             complete(result) {
-              self.$socket.emit('authenticate', {
-                token: self.token
-              }).emit('update', {
+              self.$socket.emit('update', {
                 pos: {
                   log: result.position.lng,
                   lat: result.position.lat
@@ -92,12 +92,19 @@
       };
     },
     computed: {
+      id() {
+        return window.localStorage['user']
+      },
+      room() {
+        return window.localStorage['room']
+      },
       token() {
         return window.localStorage['token']
       }
     },
     beforeRouteLeave(to, from, next) {
-      this.$socket.close()
+      if (to == '/login')
+        this.$socket.close()
       next()
     },
     mounted() {
@@ -105,6 +112,9 @@
     },
     sockets: {
       connect: function () {
+        this.$socket.emit('authenticate', {
+          token: this.token
+        })
         console.log('socket connected')
       },
       reply: function (val) {
@@ -113,7 +123,7 @@
       unauthorized: function (val) {
         this.$router.replace('/login')
       },
-      join: function(val) {
+      join: function (val) {
         this.serverInfo = val
         this.popupVisible = true
       },
@@ -123,6 +133,9 @@
       }
     },
     methods: {
+      handler() {
+        this.popupVisible = true
+      },
       string2hash(input) {
         const I64BIT_TABLE =
           'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'.split('');
@@ -174,7 +187,7 @@
       watchPos(instance) {
         setInterval(() => {
           instance.getCurrentPosition()
-        }, 3000)
+        }, 1000)
       },
       getMap: function () {
         this.instance.getCurrentPosition((status, result) => {
@@ -220,6 +233,12 @@
 
   p {
     margin: 0px;
+  }
+  .slide {
+    position:fixed;
+    top:10px;
+    right:10px;
+    z-index:2002;
   }
 
 </style>
